@@ -1,6 +1,6 @@
 import discord
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 class Bets:
@@ -21,18 +21,18 @@ class Bets:
         author_id = mes.author.id
         date = get_year_month(mes.created_at)
         if author_id not in self.bets:
-            self.bets[author_id] = {date: {0: [], 1: []}}
+            self.bets[author_id] = {date: {"0": [], "1": []}}
         elif date not in self.bets[author_id]:
-            self.bets[author_id][date] = {0: [], 1: []}
+            self.bets[author_id][date] = {"0": [], "1": []}
         await self.analize_mes(mes, date)
         
     async def analize_mes(self, mes: discord.Message, date):
         author_id = mes.author.id
         if any(succ in mes.content for succ in self.success):
-            self.bets[author_id][date][1].append(mes.id)
+            self.bets[author_id][date]["1"].append(mes.id)
             return
         elif any(fail in mes.content for fail in self.failure):
-            self.bets[author_id][date][0].append(mes.id)
+            self.bets[author_id][date]["0"].append(mes.id)
             return
         for reaction in mes.reactions:
             a = 0
@@ -42,10 +42,10 @@ class Bets:
             if a == 0:
                 continue
             if str(reaction.emoji) in self.success:
-                self.bets[author_id][date][1].append(mes.id)
+                self.bets[author_id][date]["1"].append(mes.id)
                 break
             elif str(reaction.emoji) in self.failure:
-                self.bets[author_id][date][0].append(mes.id)
+                self.bets[author_id][date]["0"].append(mes.id)
                 break
         return
                 
@@ -69,22 +69,22 @@ class Bets:
     def _entropy(self, id, date:str=None):
         try:
             if date is not None:
-                return round(100* len(self.bets[id][date][1]) / self._get_games(id, date), 2)
+                return round(100* len(self.bets[id][date]["1"]) / self._get_games(id, date), 2)
             sum_percent = {}
             for month in self.bets[id]:
-                sum_percent[month] = round(100 * len(self.bets[id][month][1]) / self._get_games(id, month), 2)
+                sum_percent[month] = round(100 * len(self.bets[id][month]["1"]) / self._get_games(id, month), 2)
             return sum_percent
         except ZeroDivisionError:
             return 0.0
 
     def _get_games(self, id, date):
-        return len(self.bets[id][date][0]) + len(self.bets[id][date][1])
+        return len(self.bets[id][date]["0"]) + len(self.bets[id][date]["1"])
 
     def _delete_duplicate(self):
         for id in self.bets:
             for month in self.bets[id]:
-                self.bets[id][month][0] = list(set(self.bets[id][month][0]))
-                self.bets[id][month][1] = list(set(self.bets[id][month][1]))
+                self.bets[id][month]["0"] = list(set(self.bets[id][month]["0"]))
+                self.bets[id][month]["1"] = list(set(self.bets[id][month]["1"]))
 
     async def _synchronized_data(self, date=None):
         for category in self._guild.categories:
@@ -105,11 +105,10 @@ class Bets:
     def get_normal_data(self):
         data = {}
         for id in self.bets:
-            name = self.members_id[id].display_name
-            data[name] = self.bets[id]
+            data[id] = self.bets[id]
             for month in self.bets[id]:
-                data[name][month][0] = len(data[name][month][0])
-                data[name][month][1] = len(data[name][month][1])
+                data[id][month]["0"] = len(data[id][month]["0"])
+                data[id][month]["1"] = len(data[id][month]["1"])
         return data
 
 
