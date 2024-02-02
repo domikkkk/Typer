@@ -57,6 +57,7 @@ async def on_message_delete(mes: discord.Message):
 
 @Typer.event
 async def on_reaction_add(reacion: discord.Reaction, user: discord.Member):
+    global Bet
     if user.bot:
         return
     if reacion.message.author.id == user.id and reacion.message.channel.id not in Bet.banned_channels and reacion.message.channel.category_id in Bet.allowed_categories:
