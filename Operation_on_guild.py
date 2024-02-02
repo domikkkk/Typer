@@ -94,10 +94,16 @@ class Bets:
                     if channel.id in self.banned_channels:
                         continue
                     print('\t' + channel.name)
-                    await self.analize_history(channel)
+                    await self.analize_history(channel, date)
 
     async def analize_history(self, channel: discord.TextChannel, date=None):
-        async for message in channel.history(limit=None, oldest_first=True):
+        if not date:
+            date = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        elif date == "all":
+            date = None
+        else:
+            date = get_datetime_from_year_month(date)
+        async for message in channel.history(limit=None, oldest_first=True, after=date):
             if message.author.bot:
                 continue
             await self.add_mes(message)
@@ -120,6 +126,14 @@ async def search_mess(id, interaction: discord.Interaction):
 
 def get_year_month(date: datetime):
     return str(date.year) + '-' + str(date.month)
+
+
+def get_datetime_from_year_month(date):
+    [year, month] = date.split('-')
+    year = int(year)
+    month = int(month)
+    date = datetime(year, month, day=1)
+    return date
 
 
 def podciag(s1: str, s2: str):
