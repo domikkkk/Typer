@@ -1,18 +1,14 @@
-from Common import TOKEN2
+from Common import TOKEN
 from discord.ext import commands
 from discord import app_commands
 import discord
 import json
 from Operation_on_guild import Bets, search_mess
+from startup import Typer, start, write_to_db
 
 
 GUILD = "ŚWIAT BUKMACHERKI"
 
-intents = discord.Intents().default().all()
-
-Typer = commands.Bot(command_prefix='>', intents=intents)
-banned_channels = [1130195009401004042]
-allowed_categories = [1128404226645692416]
 Bet: Bets = None
 
 
@@ -21,11 +17,12 @@ async def on_ready():
     synced = await Typer.tree.sync()
     print(len(synced))
     guilds = Typer.guilds
-    guild = next((g for g in guilds if g.name == GUILD), None)
+    guilds = start(guilds)
     global Bet
-    Bet = Bets(guild)
-    await Bet._synchronized_data(allowed_categories, banned_channels)
+    Bet = Bets(guilds[0])
+    await Bet._synchronized_data()
     Bet._delete_duplicate()
+    write_to_db(Bet.path, Bet.get_normal_data())
     print("Done")
 
 
@@ -35,7 +32,7 @@ async def on_message_edit(before: discord.Message, after: discord.Message):
     if before.author.id == Typer.user.id:
         return
     print("Edited")
-    if before.content != after.content and after.channel.id not in banned_channels and after.channel.category_id in allowed_categories:
+    if before.content != after.content and after.channel.id not in Bet.banned_channels and after.channel.category_id in Bet.allowed_categories:
         await Bet.add_mes(after)
         Bet._delete_duplicate()
 
@@ -45,20 +42,24 @@ async def on_message(mes: discord.Message):
     global Bet
     if mes.author.id == Typer.user.id:
         return
+    if mes.author.id == 687957649635147888:
+        print(mes.author.name, mes.author.nick)
 
 
 @Typer.event
 async def on_message_delete(mes: discord.Message):
-    if mes.channel.id in banned_channels or mes.channel.category_id not in allowed_categories:
+    global Bet
+    if mes.channel.id in Bet.banned_channels or mes.channel.category_id not in Bet.allowed_categories:
         return
     # await mes.channel.send("Nie ładnie usuwać stąd wiadomość: {}".format(mes.author.mention))
+    return
 
 
 @Typer.event
 async def on_reaction_add(reacion: discord.Reaction, user: discord.Member):
     if user.bot:
         return
-    if reacion.message.author.id == user.id and reacion.message.channel.id not in banned_channels and reacion.message.channel.category_id in allowed_categories:
+    if reacion.message.author.id == user.id and reacion.message.channel.id not in Bet.banned_channels and reacion.message.channel.category_id in Bet.allowed_categories:
         await Bet.add_mes(reacion.message)
         Bet._delete_duplicate()
 
@@ -73,13 +74,14 @@ async def emoji(interaction: discord.Interaction):
     except Exception as e:
         await interaction.response.send_message(e, ephemeral=True)
 
+
 @Typer.tree.command()
 async def synchronized(interaction: discord.Interaction):
     global Bet
     try:
         Bet.bets = {}
         await interaction.response.send_message("Aktualizuję")
-        res = await Bet._synchronized_data(allowed_categories, banned_channels)
+        res = await Bet._synchronized_data()
         Bet._delete_duplicate()
         await interaction.channel.send(res)
     except Exception as e:
