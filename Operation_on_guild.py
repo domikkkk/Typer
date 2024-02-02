@@ -86,7 +86,7 @@ class Bets:
                 self.bets[id][month][0] = list(set(self.bets[id][month][0]))
                 self.bets[id][month][1] = list(set(self.bets[id][month][1]))
 
-    async def _synchronized_data(self):
+    async def _synchronized_data(self, date=None):
         for category in self._guild.categories:
             print(category.name)
             if category.id in self.allowed_categories:
@@ -96,7 +96,7 @@ class Bets:
                     print('\t' + channel.name)
                     await self.analize_history(channel)
 
-    async def analize_history(self, channel: discord.TextChannel):
+    async def analize_history(self, channel: discord.TextChannel, date=None):
         async for message in channel.history(limit=None, oldest_first=True):
             if message.author.bot:
                 continue
@@ -105,7 +105,11 @@ class Bets:
     def get_normal_data(self):
         data = {}
         for id in self.bets:
-            data[self.members_id[id].display_name] = self.bets[id]
+            name = self.members_id[id].display_name
+            data[name] = self.bets[id]
+            for month in self.bets[id]:
+                data[name][month][0] = len(data[name][month][0])
+                data[name][month][1] = len(data[name][month][1])
         return data
 
 

@@ -96,8 +96,9 @@ async def info(interaction: discord.Interaction, name: str=None):
         data = Bet.ret_accuracy(name)
     except Exception:
         data = Bet.ret_accuracy()
-    result = '```json\n' + json.dumps(data, indent=4, ensure_ascii=False) + '\n```'
-    await interaction.response.send_message(result)
+    for id in data:
+        result = '```json\n' + json.dumps(data[id], indent=4, ensure_ascii=False) + '\n```'
+        await interaction.response.send_message(result)
 
 
 Typer.run(TOKEN)

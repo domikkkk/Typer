@@ -41,4 +41,3 @@ def start(guild: Sequence[discord.Guild]):
         if g["guild"]:
             print(f"Found {g['name']}") 
     return all_guilds
-    
