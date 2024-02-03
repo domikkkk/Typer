@@ -19,7 +19,6 @@ class Bets:
             date = get_year_month(date)
             data = read_from_db(self.path)
             for str_id in data:
-                data[str_id].pop(date, None)
                 self.bets[int(str_id)] = data[str_id]
         except Exception as e:
             print(e)
@@ -121,9 +120,6 @@ class Bets:
         data = {}
         for id in self.bets:
             data[id] = self.bets[id]
-            for month in self.bets[id]:
-                data[id][month]["0"] = len(data[id][month]["0"])
-                data[id][month]["1"] = len(data[id][month]["1"])
         return data
 
 

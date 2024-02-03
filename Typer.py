@@ -20,10 +20,10 @@ async def on_ready():
     guilds = start(guilds)
     global Bet
     Bet = Bets(guilds[0])
-    # await Bet._synchronized_data()
-    # Bet._delete_duplicate()
-    # write_to_db(Bet.path, Bet.get_normal_data())
-    # print("Done")
+    await Bet._synchronized_data()
+    Bet._delete_duplicate()
+    write_to_db(Bet.path, Bet.get_normal_data())
+    print("Done")
 
 
 @Typer.event
@@ -97,9 +97,11 @@ async def info(interaction: discord.Interaction, name: str=None):
         data = Bet.ret_accuracy(name)
     except Exception:
         data = Bet.ret_accuracy()
-    for id in data:
-        result = '```json\n' + json.dumps(data[id], indent=4, ensure_ascii=False) + '\n```'
-        await interaction.response.send_message(result)
+    await interaction.response.send_message("...")
+    for name in data:
+        data_to_show = {name: data[name]}
+        result = '```json\n' + json.dumps(data_to_show, indent=4, ensure_ascii=False) + '\n```'
+        await interaction.channel.send(result)
 
 
 Typer.run(TOKEN)
