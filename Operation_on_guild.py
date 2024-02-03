@@ -1,6 +1,7 @@
 import discord
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import datetime
+from startup import read_from_db
 
 
 class Bets:
@@ -9,11 +10,19 @@ class Bets:
         self.allowed_categories = guild["allowed_cat"]
         self.banned_channels = guild["banned_ch"]
         self.path = guild["path"]
-        self._members = self._guild.members
         self.members_id = {}
-        for member in self._members:
+        for member in self._guild.members:
             self.members_id[member.id] = member
         self.bets = {}
+        try:
+            date = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            date = get_year_month(date)
+            data = read_from_db(self.path)
+            for str_id in data:
+                data[str_id].pop(date, None)
+                self.bets[int(str_id)] = data[str_id]
+        except Exception as e:
+            print(e)
         self.success = ['✅', str(discord.utils.get(self._guild.emojis, name='success')), '<:7425classiccheckmark:', '<:zielony:']
         self.failure = ['⛔️', str(discord.utils.get(self._guild.emojis, name='x_')), '❌']
 
@@ -86,7 +95,7 @@ class Bets:
                 self.bets[id][month]["0"] = list(set(self.bets[id][month]["0"]))
                 self.bets[id][month]["1"] = list(set(self.bets[id][month]["1"]))
 
-    async def _synchronized_data(self, date=None):
+    async def _synchronized_data(self, date=None, chann=None):
         for category in self._guild.categories:
             print(category.name)
             if category.id in self.allowed_categories:

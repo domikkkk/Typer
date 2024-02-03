@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord import app_commands
 import discord
 import json
-from Operation_on_guild import Bets, search_mess
+from Operation_on_guild import Bets
 from startup import Typer, start, write_to_db
 
 
@@ -20,10 +20,10 @@ async def on_ready():
     guilds = start(guilds)
     global Bet
     Bet = Bets(guilds[0])
-    await Bet._synchronized_data()
-    Bet._delete_duplicate()
-    write_to_db(Bet.path, Bet.get_normal_data())
-    print("Done")
+    # await Bet._synchronized_data()
+    # Bet._delete_duplicate()
+    # write_to_db(Bet.path, Bet.get_normal_data())
+    # print("Done")
 
 
 @Typer.event

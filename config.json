@@ -3,6 +3,6 @@
         "name": "ŚWIAT BUKMACHERKI",
         "path": "./guilds/swiatbukmacherski.json",
         "allowed_cat": [1128404226645692416],
-        "banned_ch": [1130195009401004042]
+        "banned_ch": [1130195009401004042, 1168683642676068432]
     }
 ]
