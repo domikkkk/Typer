@@ -92,6 +92,7 @@ class Bets:
             for month in self.bets[id]:
                 self.bets[id][month]["0"] = list(set(self.bets[id][month]["0"]))
                 self.bets[id][month]["1"] = list(set(self.bets[id][month]["1"]))
+            self.bets[id] = {month: value for month, value in self.bets[id].items() if (len(value['0']) != 0 and len(value['1']) != 0)}
 
     async def _synchronized_data(self, date=None, chan_id=None):
         if chan_id is not None:
