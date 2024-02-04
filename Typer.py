@@ -5,8 +5,8 @@ import discord
 import json
 import asyncio
 import logging
-from datetime import datetime
-from Operation_on_guild import Bets
+from datetime import datetime, timedelta
+from Operation_on_guild import Bets, get_year_month
 from startup import Typer, start, write_to_db, check_date
 
 
@@ -127,7 +127,9 @@ async def info_per_month():
         print(day)
         if day == 1:
             logger.debug("Co miesięczne info")
-            data = await Bet.ret_accuracy()
+            date = datetime.utcnow() - timedelta(days=2)
+            date = get_year_month(date)
+            data = await Bet.ret_accuracy(date=date)
             for name in data:
                 data_to_show = {name: data[name]}
                 result = '```json\n' + json.dumps(data_to_show, indent=4, ensure_ascii=False) + '\n```'

@@ -15,8 +15,6 @@ class Bets:
             self.members_id[member.id] = member
         self.bets = {}
         try:
-            date = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-            date = get_year_month(date)
             data = read_from_db(self.path)
             for str_id in data:
                 self.bets[int(str_id)] = data[str_id]
@@ -130,7 +128,7 @@ class Bets:
 
     def filtr_date(self, date: str=None):
         if not date:
-            date = get_year_month(datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0))
+            date = get_year_month(datetime.utcnow())
         elif date == "all":
             date = None
         else:
