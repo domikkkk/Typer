@@ -20,7 +20,7 @@ def read_from_db(filename: str):
 
 def write_to_db(filename: str, data):
     with open(filename, 'w') as f:
-        json.dump(data, f, indent=4)
+        json.dump(data, f, indent=2)
 
 
 def guilds(typ, *, data: dict=None):

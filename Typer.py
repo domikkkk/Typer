@@ -3,11 +3,11 @@ from discord.ext import commands
 from discord import app_commands
 import discord
 import json
+import asyncio
+from datetime import datetime
 from Operation_on_guild import Bets
 from startup import Typer, start, write_to_db
 
-
-GUILD = "ŚWIAT BUKMACHERKI"
 
 Bet: Bets = None
 
@@ -22,8 +22,9 @@ async def on_ready():
     Bet = Bets(guilds[0])
     await Bet._synchronized_data()
     Bet._delete_duplicate()
-    write_to_db(Bet.path, Bet.get_normal_data())
+    # write_to_db(Bet.path, Bet.get_normal_data())
     print("Done")
+    Typer.loop.create_task(info_per_month())
 
 
 @Typer.event
@@ -42,8 +43,6 @@ async def on_message(mes: discord.Message):
     global Bet
     if mes.author.id == Typer.user.id:
         return
-    if mes.author.id == 687957649635147888:
-        print(mes.author.name, mes.author.nick)
 
 
 @Typer.event
@@ -91,17 +90,33 @@ async def synchronized(interaction: discord.Interaction):
 
 @Typer.tree.command()
 @app_commands.describe(name = "Nazwa członka")
-async def info(interaction: discord.Interaction, name: str=None):
+async def info(interaction: discord.Interaction, name: str=None, date: str=None):
     global Bet
-    try:
-        data = Bet.ret_accuracy(name)
-    except Exception:
-        data = Bet.ret_accuracy()
+    data = await Bet.ret_accuracy(name, date)
     await interaction.response.send_message("...")
     for name in data:
         data_to_show = {name: data[name]}
         result = '```json\n' + json.dumps(data_to_show, indent=4, ensure_ascii=False) + '\n```'
         await interaction.channel.send(result)
+
+
+async def info_per_month():
+    await Typer.wait_until_ready()
+    global Bet
+    channel_id = 1158130114933047387
+    channel_id = 1114293456127414293
+    channel = Typer.get_channel(channel_id)
+    while not Typer.is_closed():
+        day = datetime.utcnow().day
+        print(day)
+        if day == 1:
+            print("Comiesięczne info")
+            data = await Bet.ret_accuracy()
+            for name in data:
+                data_to_show = {name: data[name]}
+                result = '```json\n' + json.dumps(data_to_show, indent=4, ensure_ascii=False) + '\n```'
+                await channel.send(result)
+        await asyncio.sleep(24 * 60 * 60)
 
 
 Typer.run(TOKEN)

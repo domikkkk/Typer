@@ -10,7 +10,7 @@ class Bets:
         self.allowed_categories = guild["allowed_cat"]
         self.banned_channels = guild["banned_ch"]
         self.path = guild["path"]
-        self.members_id = {}
+        self.members_id: dict[int|discord.User] = {}
         for member in self._guild.members:
             self.members_id[member.id] = member
         self.bets = {}
@@ -57,31 +57,30 @@ class Bets:
                 break
         return
                 
-    def ret_accuracy(self, au:str=None, date:str=None):
-        if not au:
-            if not date:
-                data = {}
-                for id in self.bets:
-                    data[self.members_id[id].display_name] = {month: {"Średnia": self._entropy(id, month),
-                                                                      "Ilość zakładów": self._get_games(id, month)}
-                                                              for month in self.bets[id]}
-                return data
-            return {self.members_id[id].display_name: {date: {"Średnia": self._entropy(id, date), "Ilość zakładów": self._get_games(id, date)}}}
-        au = au.lower()
+    async def ret_accuracy(self, au:str=None, date:str=None):
+        data = {}
         for id in self.bets:
-            name = self.members_id[id].display_name
-            if podciag(au, name) / max(len(au), len(name)) > 0.7:
-                return {name: {"Średnia": self._entropy(id, date), "Ilość zakładów": self._get_games(id, date)}}
-        return {"message": f"Nie znaleziono członka {name}"}
+            data[self.members_id[id].display_name] = {month: {"Średnia": self._entropy(id, month),
+                                                                "Ilość zakładów": self._get_games(id, month)}
+                                                        for month in self.bets[id]}
+        date = self.filtr_date(date)
+        if date is not None:
+            for name in data:
+                if date in data[name]:
+                    data[name] = {date: data[name][date]}
+                else:
+                    data[name] = {date: "Brak danych z tego miesiąca"}
+        if au is not None:
+            au = au.lower()
+            for name in data:
+                if podciag(au, name) / max(len(au), len(name)) > 0.7:
+                    return {name: data[name]}
+            return {"message": f"Brak info na temat członka {au}"}
+        return data
 
-    def _entropy(self, id, date:str=None):
+    def _entropy(self, id, date:str):
         try:
-            if date is not None:
-                return round(100* len(self.bets[id][date]["1"]) / self._get_games(id, date), 2)
-            sum_percent = {}
-            for month in self.bets[id]:
-                sum_percent[month] = round(100 * len(self.bets[id][month]["1"]) / self._get_games(id, month), 2)
-            return sum_percent
+            return round(100* len(self.bets[id][date]["1"]) / self._get_games(id, date), 2)
         except ZeroDivisionError:
             return 0.0
 
@@ -105,11 +104,8 @@ class Bets:
                     await self.analize_history(channel, date)
 
     async def analize_history(self, channel: discord.TextChannel, date=None):
-        if not date:
-            date = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        elif date == "all":
-            date = None
-        else:
+        date = self.filtr_date(date)
+        if date is not None:
             date = get_datetime_from_year_month(date)
         async for message in channel.history(limit=None, oldest_first=True, after=date):
             if message.author.bot:
@@ -121,6 +117,13 @@ class Bets:
         for id in self.bets:
             data[id] = self.bets[id]
         return data
+
+    def filtr_date(self, date: str=None):
+        if not date:
+            date = get_year_month(datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0))
+        elif date == "all":
+            date = None
+        return date
 
 
 async def search_mess(id, interaction: discord.Interaction):
