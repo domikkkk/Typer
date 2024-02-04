@@ -133,6 +133,8 @@ class Bets:
             date = get_year_month(datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0))
         elif date == "all":
             date = None
+        else:
+            date = '-'.join([str(int(x)) for x in date.split('-')])
         return date
 
 

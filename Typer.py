@@ -6,7 +6,7 @@ import json
 import asyncio
 from datetime import datetime
 from Operation_on_guild import Bets
-from startup import Typer, start, write_to_db
+from startup import Typer, start, write_to_db, check_date
 
 
 Bet: Bets = None
@@ -20,7 +20,7 @@ async def on_ready():
     guilds = start(guilds)
     global Bet
     Bet = Bets(guilds[0])
-    await Bet._synchronized_data(date="all")
+    await Bet._synchronized_data()
     Bet._delete_duplicate()
     write_to_db(Bet.path, Bet.get_normal_data())
     print("Done")
@@ -32,7 +32,7 @@ async def on_message_edit(before: discord.Message, after: discord.Message):
     global Bet
     if before.author.id == Typer.user.id:
         return
-    print("Edited")
+    print(f"{before.author.display_name} editied message at {datetime.utcnow()} on channel {before.channel.name}")
     if before.content != after.content and after.channel.id not in Bet.banned_channels and after.channel.category_id in Bet.allowed_categories:
         await Bet.add_mes(after)
         Bet._delete_duplicate()
@@ -76,8 +76,14 @@ async def emoji(interaction: discord.Interaction):
 
 
 @Typer.tree.command()
+@app_commands.describe(date = "Opcjonalnie miesiąc od jakiego momentu zaktualizować dane.\
+    Domyślnie aktualizuje ostatni miesiąc. Format YYYY-MM. Jeśli chcemy całą historię to wpisać 'all'",
+                       channel_id = "Opcjonalnie id kanału, który chcemy zaktualizować. Domyślnie wszystkie kanały typerów")
 async def synchronize(interaction: discord.Interaction, date: str=None, channel_id: str=None):
     global Bet
+    if not check_date(date):
+        await interaction.channel.send("Podaj w formacie YYYY-MM")
+        return
     try:
         channel_id = int(channel_id)
         await interaction.response.send_message("Aktualizuję...")
@@ -90,9 +96,14 @@ async def synchronize(interaction: discord.Interaction, date: str=None, channel_
 
 
 @Typer.tree.command()
-@app_commands.describe(name = "Nazwa członka")
+@app_commands.describe(name = "Nazwa członka. Domyślnie wszyscy",
+                       date = "Miesiąc, z którego chcemy statystyki.\
+                           Domyślnie ostatni miesiąc. Format YYYY-MM. Jeśli chcemy całą historię to wpisać 'all'.")
 async def info(interaction: discord.Interaction, name: str=None, date: str=None):
     global Bet
+    if not check_date(date):
+        await interaction.channel.send("Podaj w formacie YYYY-MM")
+        return
     data = await Bet.ret_accuracy(name, date)
     await interaction.response.send_message("...")
     for name in data:

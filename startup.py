@@ -41,3 +41,11 @@ def start(guild: Sequence[discord.Guild]):
         if g["guild"]:
             print(f"Found {g['name']}") 
     return all_guilds
+
+
+def check_date(date: str=None):
+    if date:
+        if '-' in date or date == 'all':
+            return True
+        return False
+    return True
