@@ -22,7 +22,6 @@ async def on_ready():
     Bet = Bets(guilds[0])
     await Bet._synchronized_data()
     Bet._delete_duplicate()
-    # write_to_db(Bet.path, Bet.get_normal_data())
     print("Done")
     Typer.loop.create_task(info_per_month())
 
@@ -76,13 +75,14 @@ async def emoji(interaction: discord.Interaction):
 
 
 @Typer.tree.command()
-async def synchronized(interaction: discord.Interaction):
+async def synchronize(interaction: discord.Interaction, date: str=None, channel_id: str=None):
     global Bet
     try:
-        Bet.bets = {}
-        await interaction.response.send_message("Aktualizuję")
-        res = await Bet._synchronized_data()
+        channel_id = int(channel_id)
+        await interaction.response.send_message("Aktualizuję...")
+        res = await Bet._synchronized_data(date, channel_id)
         Bet._delete_duplicate()
+        write_to_db(Bet.path, Bet.get_normal_data())
         await interaction.channel.send(res)
     except Exception as e:
         await interaction.response.send_message(e, ephemeral=True)
@@ -116,6 +116,7 @@ async def info_per_month():
                 data_to_show = {name: data[name]}
                 result = '```json\n' + json.dumps(data_to_show, indent=4, ensure_ascii=False) + '\n```'
                 await channel.send(result)
+            write_to_db(Bet.path, Bet.get_normal_data())
         await asyncio.sleep(24 * 60 * 60)
 
 

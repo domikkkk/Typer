@@ -93,7 +93,15 @@ class Bets:
                 self.bets[id][month]["0"] = list(set(self.bets[id][month]["0"]))
                 self.bets[id][month]["1"] = list(set(self.bets[id][month]["1"]))
 
-    async def _synchronized_data(self, date=None, chann=None):
+    async def _synchronized_data(self, date=None, chan_id=None):
+        if chan_id is not None:
+            channel = self._guild.get_channel(chan_id)
+            if chan_id not in self.banned_channels and channel.category_id in self.allowed_categories:
+                print(channel.category.name)
+                print('\t' + channel.name)
+                await self.analize_history(channel, date)
+                return "Pomyślnie zaktualizowano"
+            return "Ten kanał nie jest analizowany"
         for category in self._guild.categories:
             print(category.name)
             if category.id in self.allowed_categories:
@@ -102,8 +110,9 @@ class Bets:
                         continue
                     print('\t' + channel.name)
                     await self.analize_history(channel, date)
+        return "Pomyślnie zaktualizowano"
 
-    async def analize_history(self, channel: discord.TextChannel, date=None):
+    async def analize_history(self, channel: discord.TextChannel, date: str=None):
         date = self.filtr_date(date)
         if date is not None:
             date = get_datetime_from_year_month(date)
