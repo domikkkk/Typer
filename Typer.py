@@ -20,8 +20,9 @@ async def on_ready():
     guilds = start(guilds)
     global Bet
     Bet = Bets(guilds[0])
-    await Bet._synchronized_data()
+    await Bet._synchronized_data(date="all")
     Bet._delete_duplicate()
+    write_to_db(Bet.path, Bet.get_normal_data())
     print("Done")
     Typer.loop.create_task(info_per_month())
 
