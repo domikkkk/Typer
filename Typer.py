@@ -126,7 +126,7 @@ async def info_per_month():
         day = datetime.utcnow().day
         print(day)
         if day == 1:
-            logger.debug("Comiesięczne info")
+            logger.debug("Info in every month")
             date = datetime.utcnow() - timedelta(days=2)
             date = get_year_month(date)
             data = await Bet.ret_accuracy(date=date)
